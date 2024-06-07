@@ -59,4 +59,6 @@ struct SerialGbtrs {
 };
 }  // namespace KokkosBatched
 
+#include "KokkosBatched_Gbtrs_Serial_Impl.hpp"
+
 #endif  // KOKKOSBATCHED_GBTRS_HPP_
