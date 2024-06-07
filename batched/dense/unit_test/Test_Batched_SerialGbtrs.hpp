@@ -3,7 +3,6 @@
 #include <Kokkos_Random.hpp>
 #include <KokkosBlas2_gemv.hpp>
 #include "KokkosBatched_Gbtrs.hpp"
-#include "../impl/KokkosBatched_Gbtrs_Serial_Impl.hpp"
 #include "Test_Utils.hpp"
 
 using namespace KokkosBatched;
