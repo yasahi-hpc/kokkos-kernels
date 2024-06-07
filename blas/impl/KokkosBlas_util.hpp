@@ -85,6 +85,7 @@ struct Algo {
   using SolveLU   = Level3;
   using QR        = Level3;
   using UTV       = Level3;
+  using Getrs     = Level3;
   using Gbtrs     = Level3;
   using Pbtrs     = Level3;
   using Ptts2     = Level3;
