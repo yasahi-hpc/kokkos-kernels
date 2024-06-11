@@ -17,7 +17,7 @@
 #ifndef KOKKOSBATCHED_PTTRS_SERIAL_IMPL_HPP_
 #define KOKKOSBATCHED_PTTRS_SERIAL_IMPL_HPP_
 
-#include "KokkosBatched_Ptts2_Serial_Impl.hpp"
+#include "KokkosBatched_Ptts2.hpp"
 
 /// \author Yuuichi Asahi (yuuichi.asahi@cea.fr)
 
