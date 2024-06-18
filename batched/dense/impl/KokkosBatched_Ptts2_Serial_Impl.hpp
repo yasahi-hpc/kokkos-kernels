@@ -26,7 +26,7 @@ struct SerialPtts2Internal {
   KOKKOS_INLINE_FUNCTION static int invoke(
       const int n, const ValueType *KOKKOS_RESTRICT d, const int ds0,
       const ValueType *KOKKOS_RESTRICT e, const int es0,
-      ValueType *KOKKOS_RESTRICT b, const int bs0, const int ldb);
+      ValueType *KOKKOS_RESTRICT b, const int bs0);
 };
 
 template <>
@@ -34,7 +34,7 @@ template <typename ValueType>
 KOKKOS_INLINE_FUNCTION int SerialPtts2Internal<Algo::Ptts2::Unblocked>::invoke(
     const int n, const ValueType *KOKKOS_RESTRICT d, const int ds0,
     const ValueType *KOKKOS_RESTRICT e, const int es0,
-    ValueType *KOKKOS_RESTRICT b, const int bs0, const int ldb) {
+    ValueType *KOKKOS_RESTRICT b, const int bs0) {
   // Solve L * x = b
   for (int i = 1; i < n; i++) {
     b[i * bs0] -= e[(i - 1) * es0] * b[(i - 1) * bs0];
@@ -57,7 +57,6 @@ struct SerialPtts2<Algo::Ptts2::Unblocked> {
                                            const BViewType &b) {
     using ScalarType = typename DViewType::non_const_value_type;
     int n            = d.extent(0);
-    int ldb          = b.extent(0);
 
     if (n == 1) {
       const ScalarType alpha = 1.0 / d(0);
@@ -67,8 +66,7 @@ struct SerialPtts2<Algo::Ptts2::Unblocked> {
     // Solve A * X = B using the factorization A = L*D*L**T,
     // overwriting each right hand side vector with its solution.
     return SerialPtts2Internal<Algo::Ptts2::Unblocked>::invoke(
-        n, d.data(), d.stride(0), e.data(), e.stride(0), b.data(), b.stride(0),
-        ldb);
+        n, d.data(), d.stride(0), e.data(), e.stride(0), b.data(), b.stride(0));
   }
 };
 }  // namespace KokkosBatched
