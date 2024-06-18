@@ -35,7 +35,7 @@ namespace KokkosBatched {
 template <typename AlgoType>
 struct SerialPbtrsInternalLower {
   template <typename ValueType>
-  KOKKOS_INLINE_FUNCTION static int invoke(const int an, const int xm,
+  KOKKOS_INLINE_FUNCTION static int invoke(const int an,
                                            const ValueType *KOKKOS_RESTRICT A,
                                            const int as0, const int as1,
                                            /**/ ValueType *KOKKOS_RESTRICT x,
@@ -46,16 +46,16 @@ template <>
 template <typename ValueType>
 KOKKOS_INLINE_FUNCTION int
 SerialPbtrsInternalLower<Algo::Pbtrs::Unblocked>::invoke(
-    const int an, const int xm, const ValueType *KOKKOS_RESTRICT A,
-    const int as0, const int as1,
+    const int an, const ValueType *KOKKOS_RESTRICT A, const int as0,
+    const int as1,
     /**/ ValueType *KOKKOS_RESTRICT x, const int xs0, const int kd) {
   // Solve L*X = B, overwriting B with X.
-  SerialTbsvInternalLower<Algo::Tbsv::Unblocked>::invoke(false, an, xm, A, as0,
-                                                         as1, x, xs0, kd);
+  SerialTbsvInternalLower<Algo::Tbsv::Unblocked>::invoke(false, an, A, as0, as1,
+                                                         x, xs0, kd);
 
   // Solve L**T *X = B, overwriting B with X.
   SerialTbsvInternalLowerTranspose<Algo::Tbsv::Unblocked>::invoke(
-      false, false, an, xm, A, as0, as1, x, xs0, kd);
+      false, false, an, A, as0, as1, x, xs0, kd);
 
   return 0;
 }
@@ -67,7 +67,7 @@ SerialPbtrsInternalLower<Algo::Pbtrs::Unblocked>::invoke(
 template <typename AlgoType>
 struct SerialPbtrsInternalUpper {
   template <typename ValueType>
-  KOKKOS_INLINE_FUNCTION static int invoke(const int an, const int xm,
+  KOKKOS_INLINE_FUNCTION static int invoke(const int an,
                                            const ValueType *KOKKOS_RESTRICT A,
                                            const int as0, const int as1,
                                            /**/ ValueType *KOKKOS_RESTRICT x,
@@ -78,16 +78,16 @@ template <>
 template <typename ValueType>
 KOKKOS_INLINE_FUNCTION int
 SerialPbtrsInternalUpper<Algo::Pbtrs::Unblocked>::invoke(
-    const int an, const int xm, const ValueType *KOKKOS_RESTRICT A,
-    const int as0, const int as1,
+    const int an, const ValueType *KOKKOS_RESTRICT A, const int as0,
+    const int as1,
     /**/ ValueType *KOKKOS_RESTRICT x, const int xs0, const int kd) {
   // Solve U**T *X = B, overwriting B with X.
   SerialTbsvInternalUpperTranspose<Algo::Tbsv::Unblocked>::invoke(
-      false, false, an, xm, A, as0, as1, x, xs0, kd);
+      false, false, an, A, as0, as1, x, xs0, kd);
 
   // Solve U*X = B, overwriting B with X.
-  SerialTbsvInternalUpper<Algo::Tbsv::Unblocked>::invoke(false, an, xm, A, as0,
-                                                         as1, x, xs0, kd);
+  SerialTbsvInternalUpper<Algo::Tbsv::Unblocked>::invoke(false, an, A, as0, as1,
+                                                         x, xs0, kd);
 
   return 0;
 }
