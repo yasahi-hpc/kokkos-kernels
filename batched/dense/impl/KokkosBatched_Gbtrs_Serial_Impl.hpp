@@ -161,8 +161,8 @@ struct SerialGbtrs<Trans::Transpose, Algo::Gbtrs::Unblocked> {
 
         auto info_gemv =
             KokkosBlas::Impl::SerialGemvInternal<Algo::Gemv::Unblocked>::invoke(
-                1, a.extent(0), -1.0, a.data(), a.stride_0(), 1, x.data(),
-                x.stride_0(), 1.0, y.data(), y.stride_0());
+                1, a.extent(0), -1.0, a.data(), a.stride_0(), a.stride_0(),
+                x.data(), x.stride_0(), 1.0, y.data(), y.stride_0());
         if (info_gemv) return info_gemv;
 
         // If pivot index is not j, swap rows l and j in b
@@ -210,8 +210,8 @@ struct SerialGbtrs<Trans::ConjTranspose, Algo::Gbtrs::Unblocked> {
 
         auto info_gemv =
             KokkosBlas::Impl::SerialGemvInternal<Algo::Gemv::Unblocked>::invoke(
-                1, a.extent(0), -1.0, a.data(), a.stride_0(), 1, x.data(),
-                x.stride_0(), 1.0, y.data(), y.stride_0());
+                1, a.extent(0), -1.0, a.data(), a.stride_0(), a.stride_0(),
+                x.data(), x.stride_0(), 1.0, y.data(), y.stride_0());
         if (info_gemv) return info_gemv;
 
         // If pivot index is not j, swap rows l and j in b

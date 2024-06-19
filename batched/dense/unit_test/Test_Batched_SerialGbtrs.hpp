@@ -204,7 +204,7 @@ int test_batched_gbtrs() {
   {
     using LayoutType = Kokkos::LayoutLeft;
     Test::Gbtrs::impl_test_batched_gbtrs_analytical<
-        DeviceType, ScalarType, LayoutType, ParamTagType, AlgoTagType>(1);
+        DeviceType, ScalarType, LayoutType, ParamTagType, AlgoTagType>(5);
   }
 #endif
 
@@ -212,7 +212,7 @@ int test_batched_gbtrs() {
   {
     using LayoutType = Kokkos::LayoutRight;
     Test::Gbtrs::impl_test_batched_gbtrs_analytical<
-        DeviceType, ScalarType, LayoutType, ParamTagType, AlgoTagType>(1);
+        DeviceType, ScalarType, LayoutType, ParamTagType, AlgoTagType>(5);
   }
 #endif
   return 0;
