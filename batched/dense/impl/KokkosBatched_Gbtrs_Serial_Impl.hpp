@@ -18,8 +18,8 @@
 #define KOKKOSBATCHED_GBTRS_SERIAL_IMPL_HPP_
 
 #include <KokkosBlas2_gemv.hpp>
-#include "KokkosBatched_Tbsv_Serial_Impl.hpp"
-#include "KokkosBatched_Util.hpp"
+#include <KokkosBatched_Tbsv.hpp>
+#include <KokkosBatched_Util.hpp>
 
 namespace KokkosBatched {
 
