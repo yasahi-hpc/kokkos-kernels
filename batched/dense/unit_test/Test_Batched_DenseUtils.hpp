@@ -311,8 +311,8 @@ void banded_to_full(InViewType& in, OutViewType& out, int k = 1) {
 
 /// \brief Create an upper or lower triangular matrix from an input matrix:
 /// Setting elements above or below a specified diagonal to zero based on the type of triangle.
-/// The triangular type (upper or lower) is specified by the `UploType` template parameter. 
-/// Elements above or below the specified diagonal (determined by `k`) are set to zero. 
+/// The triangular type (upper or lower) is specified by the `UploType` template parameter.
+/// Elements above or below the specified diagonal (determined by `k`) are set to zero.
 ///
 /// \tparam InViewType: Input type for the matrix, needs to be a 3D view
 /// \tparam OutViewType: Output type for the matrix, needs to be a 3D view

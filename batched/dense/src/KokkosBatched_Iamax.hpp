@@ -29,7 +29,7 @@ namespace KokkosBatched {
 /// \tparam XViewType: Input view type, needs to be a 1D view
 ///
 /// \param X [in]: Input view type
-/// 
+///
 /// \return The index of the first element having maximum absolute value
 /// No nested parallel_for is used inside of the function.
 ///

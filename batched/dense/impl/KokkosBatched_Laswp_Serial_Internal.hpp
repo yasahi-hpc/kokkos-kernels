@@ -35,8 +35,7 @@ namespace KokkosBatched {
 struct SerialLaswpVectorForwardInternal {
   template <typename ValueType>
   KOKKOS_INLINE_FUNCTION static int invoke(const int piv,
-                                           /* */ ValueType *KOKKOS_RESTRICT A,
-                                           const int as0) {
+                                           /* */ ValueType *KOKKOS_RESTRICT A, const int as0) {
     if (piv != 0) {
       const int idx_p     = piv * as0;
       const ValueType tmp = A[0];
@@ -47,11 +46,8 @@ struct SerialLaswpVectorForwardInternal {
   }
 
   template <typename IntType, typename ValueType>
-  KOKKOS_INLINE_FUNCTION static int invoke(const int plen,
-                                           const IntType *KOKKOS_RESTRICT p,
-                                           const int ps0,
-                                           /* */ ValueType *KOKKOS_RESTRICT A,
-                                           const int as0) {
+  KOKKOS_INLINE_FUNCTION static int invoke(const int plen, const IntType *KOKKOS_RESTRICT p, const int ps0,
+                                           /* */ ValueType *KOKKOS_RESTRICT A, const int as0) {
     for (int i = 0; i < plen; ++i) {
       const int piv = p[i * ps0];
       if (piv != 0) {
@@ -69,8 +65,7 @@ struct SerialLaswpVectorForwardInternal {
 struct SerialLaswpMatrixForwardInternal {
   template <typename MemberType, typename ValueType>
   KOKKOS_INLINE_FUNCTION static int invoke(const int n, const int piv,
-                                           /* */ ValueType *KOKKOS_RESTRICT A,
-                                           const int as0, const int as1) {
+                                           /* */ ValueType *KOKKOS_RESTRICT A, const int as0, const int as1) {
     if (piv != 0) {
       for (int j = 0; j < n; j++) {
         ValueType *KOKKOS_RESTRICT A_at_j = A + j * as1;
@@ -84,11 +79,8 @@ struct SerialLaswpMatrixForwardInternal {
   }
 
   template <typename IntType, typename ValueType>
-  KOKKOS_INLINE_FUNCTION static int invoke(const int n, const int plen,
-                                           const IntType *KOKKOS_RESTRICT p,
-                                           const int ps0,
-                                           /* */ ValueType *KOKKOS_RESTRICT A,
-                                           const int as0, const int as1) {
+  KOKKOS_INLINE_FUNCTION static int invoke(const int n, const int plen, const IntType *KOKKOS_RESTRICT p, const int ps0,
+                                           /* */ ValueType *KOKKOS_RESTRICT A, const int as0, const int as1) {
     for (int j = 0; j < n; j++) {
       ValueType *KOKKOS_RESTRICT A_at_j = A + j * as1;
       for (int i = 0; i < plen; ++i) {
@@ -113,8 +105,7 @@ struct SerialLaswpMatrixForwardInternal {
 struct SerialLaswpVectorBackwardInternal {
   template <typename ValueType>
   KOKKOS_INLINE_FUNCTION static int invoke(const int piv,
-                                           /* */ ValueType *KOKKOS_RESTRICT A,
-                                           const int as0) {
+                                           /* */ ValueType *KOKKOS_RESTRICT A, const int as0) {
     if (piv != 0) {
       const int idx_p     = piv * as0;
       const ValueType tmp = A[0];
@@ -125,11 +116,8 @@ struct SerialLaswpVectorBackwardInternal {
   }
 
   template <typename IntType, typename ValueType>
-  KOKKOS_INLINE_FUNCTION static int invoke(const int plen,
-                                           const IntType *KOKKOS_RESTRICT p,
-                                           const int ps0,
-                                           /* */ ValueType *KOKKOS_RESTRICT A,
-                                           const int as0) {
+  KOKKOS_INLINE_FUNCTION static int invoke(const int plen, const IntType *KOKKOS_RESTRICT p, const int ps0,
+                                           /* */ ValueType *KOKKOS_RESTRICT A, const int as0) {
     for (int i = (plen - 1); i >= 0; --i) {
       const int piv = p[i * ps0];
       if (piv != 0) {
@@ -147,8 +135,7 @@ struct SerialLaswpVectorBackwardInternal {
 struct SerialLaswpMatrixBackwardInternal {
   template <typename ValueType>
   KOKKOS_INLINE_FUNCTION static int invoke(const int n, const int piv,
-                                           /* */ ValueType *KOKKOS_RESTRICT A,
-                                           const int as0, const int as1) {
+                                           /* */ ValueType *KOKKOS_RESTRICT A, const int as0, const int as1) {
     if (piv != 0) {
       for (int j = 0; j < n; j++) {
         ValueType *KOKKOS_RESTRICT A_at_j = A + j * as1;
@@ -162,11 +149,8 @@ struct SerialLaswpMatrixBackwardInternal {
   }
 
   template <typename IntType, typename ValueType>
-  KOKKOS_INLINE_FUNCTION static int invoke(const int n, const int plen,
-                                           const IntType *KOKKOS_RESTRICT p,
-                                           const int ps0,
-                                           /* */ ValueType *KOKKOS_RESTRICT A,
-                                           const int as0, const int as1) {
+  KOKKOS_INLINE_FUNCTION static int invoke(const int n, const int plen, const IntType *KOKKOS_RESTRICT p, const int ps0,
+                                           /* */ ValueType *KOKKOS_RESTRICT A, const int as0, const int as1) {
     for (int j = 0; j < n; j++) {
       ValueType *KOKKOS_RESTRICT A_at_j = A + j * as1;
       for (int i = (plen - 1); i >= 0; --i) {

@@ -43,8 +43,7 @@ struct SerialLaswp {
   KOKKOS_INLINE_FUNCTION static int invoke(const int piv, const AViewType &A);
 
   template <typename PivViewType, typename AViewType>
-  KOKKOS_INLINE_FUNCTION static int invoke(const PivViewType &piv,
-                                           const AViewType &A);
+  KOKKOS_INLINE_FUNCTION static int invoke(const PivViewType &piv, const AViewType &A);
 };
 }  // namespace KokkosBatched
 
