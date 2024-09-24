@@ -86,6 +86,8 @@ struct Algo {
   using QR        = Level3;
   using UTV       = Level3;
   using Pttrf     = Level3;
+  using Pttrs     = Level3;
+  using Getrf     = Level3;
 
   struct Level2 {
     struct Unblocked {};
@@ -118,6 +120,8 @@ struct Algo {
   using Trsv   = Level2;
   using ApplyQ = Level2;
   using Tbsv   = Level2;
+  using Pbtrf  = Level2;
+  using Pbtrs  = Level2;
 };
 
 namespace Impl {
