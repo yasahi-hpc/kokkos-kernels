@@ -17,16 +17,16 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
+#include <KokkosBlas2_gemv.hpp>
 #include <KokkosBatched_Util.hpp>
 #include <KokkosBatched_Getrf.hpp>
 #include <KokkosBatched_Getrs.hpp>
-#include <KokkosBatched_Gemm_Decl.hpp>
 #include "Test_Batched_DenseUtils.hpp"
 
 using namespace KokkosBatched;
 
 namespace Test {
-namespace Getrf {
+namespace Getrs {
 
 template <typename T>
 struct ParamTag {
@@ -74,12 +74,12 @@ struct Functor_BatchedSerialGetrs {
       : _a(a), _b(b), _ipiv(ipiv) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const ParamTagType &, const int k) const {
+  void operator()(const ParamTagType &, const int k, int &info) const {
     auto aa = Kokkos::subview(_a, k, Kokkos::ALL(), Kokkos::ALL());
     auto ipiv = Kokkos::subview(_ipiv, k, Kokkos::ALL());
     auto bb   = Kokkos::subview(_b, k, Kokkos::ALL());
 
-    KokkosBatched::SerialGetrs<typename ParamTagType::trans,
+    info += KokkosBatched::SerialGetrs<typename ParamTagType::trans,
                                AlgoTagType>::invoke(aa, ipiv, bb);
   }
 
@@ -97,35 +97,37 @@ struct Functor_BatchedSerialGetrs {
   }
 };
 
-template <typename DeviceType, typename ScalarType, typename AViewType, typename BViewType, typename CViewType>
-struct Functor_BatchedSerialGemm {
+template <typename DeviceType, typename ScalarType, typename AViewType,
+          typename xViewType, typename yViewType>
+struct Functor_BatchedSerialGemv {
   using execution_space = typename DeviceType::execution_space;
   AViewType _a;
-  BViewType _b;
-  CViewType _c;
+  xViewType _x;
+  yViewType _y;
   ScalarType _alpha, _beta;
 
   KOKKOS_INLINE_FUNCTION
-  Functor_BatchedSerialGemm(const ScalarType alpha, const AViewType &a, const BViewType &b, const ScalarType beta,
-                            const CViewType &c)
-      : _a(a), _b(b), _c(c), _alpha(alpha), _beta(beta) {}
+  Functor_BatchedSerialGemv(const ScalarType alpha, const AViewType &a,
+                            const xViewType &x, const ScalarType beta,
+                            const yViewType &y)
+      : _a(a), _x(x), _y(y), _alpha(alpha), _beta(beta) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int k) const {
     auto aa = Kokkos::subview(_a, k, Kokkos::ALL(), Kokkos::ALL());
-    auto bb = Kokkos::subview(_b, k, Kokkos::ALL(), Kokkos::ALL());
-    auto cc = Kokkos::subview(_c, k, Kokkos::ALL(), Kokkos::ALL());
+    auto xx = Kokkos::subview(_x, k, Kokkos::ALL());
+    auto yy = Kokkos::subview(_y, k, Kokkos::ALL());
 
-    KokkosBatched::SerialGemm<Trans::NoTranspose, Trans::NoTranspose, Algo::Gemm::Unblocked>::invoke(_alpha, aa, bb,
-                                                                                                     _beta, cc);
+    KokkosBlas::SerialGemv<Trans::NoTranspose, Algo::Gemv::Unblocked>::invoke(
+        _alpha, aa, xx, _beta, yy);
   }
 
   inline void run() {
     using value_type = typename AViewType::non_const_value_type;
-    std::string name_region("KokkosBatched::Test::SerialGetrf");
+    std::string name_region("KokkosBatched::Test::SerialGetrs");
     const std::string name_value_type = Test::value_type_name<value_type>();
     std::string name                  = name_region + name_value_type;
-    Kokkos::RangePolicy<execution_space> policy(0, _a.extent(0));
+    Kokkos::RangePolicy<execution_space> policy(0, _x.extent(0));
     Kokkos::parallel_for(name.c_str(), policy, *this);
   }
 };
@@ -248,7 +250,7 @@ void impl_test_batched_getrs(const int N, const int BlkSize) {
 
   // Gemv to compute A*x, this should be identical to b
   Functor_BatchedSerialGemv<DeviceType, ScalarType, View3DType, View2DType,
-                            View2DType, ParamTagType>(1.0, A, x, 0.0, y)
+                            View2DType>(1.0, A, x, 0.0, y)
       .run();
 
   // this eps is about 10^-14
@@ -283,11 +285,11 @@ int test_batched_getrs() {
 #if defined(KOKKOSKERNELS_INST_LAYOUTRIGHT)
   {
     using LayoutType = Kokkos::LayoutRight;
-    Test::Getrf::impl_test_batched_getrs_analytical<DeviceType, ScalarType, LayoutType, ParamTagType, AlgoTagType>(1);
-    Test::Getrf::impl_test_batched_getrs_analytical<DeviceType, ScalarType, LayoutType, ParamTagType, AlgoTagType>(2);
+    Test::Getrs::impl_test_batched_getrs_analytical<DeviceType, ScalarType, LayoutType, ParamTagType, AlgoTagType>(1);
+    Test::Getrs::impl_test_batched_getrs_analytical<DeviceType, ScalarType, LayoutType, ParamTagType, AlgoTagType>(2);
     for (int i = 0; i < 10; i++) {
-      Test::Getrf::impl_test_batched_getrs<DeviceType, ScalarType, LayoutType, ParamTagType, AlgoTagType>(1, i);
-      Test::Getrf::impl_test_batched_getrs<DeviceType, ScalarType, LayoutType, ParamTagType, AlgoTagType>(2, i);
+      Test::Getrs::impl_test_batched_getrs<DeviceType, ScalarType, LayoutType, ParamTagType, AlgoTagType>(1, i);
+      Test::Getrs::impl_test_batched_getrs<DeviceType, ScalarType, LayoutType, ParamTagType, AlgoTagType>(2, i);
     }
   }
 #endif

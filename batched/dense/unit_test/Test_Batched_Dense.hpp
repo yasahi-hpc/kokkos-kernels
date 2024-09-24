@@ -65,6 +65,10 @@
 #include "Test_Batched_SerialGetrf_Real.hpp"
 #include "Test_Batched_SerialGetrs.hpp"
 #include "Test_Batched_SerialGetrs_Real.hpp"
+#include "Test_Batched_SerialGbtrf.hpp"
+#include "Test_Batched_SerialGbtrf_Real.hpp"
+#include "Test_Batched_SerialGbtrs.hpp"
+#include "Test_Batched_SerialGbtrs_Real.hpp"
 
 // Team Kernels
 #include "Test_Batched_TeamAxpy.hpp"

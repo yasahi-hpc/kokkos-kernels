@@ -89,6 +89,8 @@ struct Algo {
   using Pttrs     = Level3;
   using Getrf     = Level3;
   using Getrs     = Level3;
+  using Gbtrf     = Level3;
+  using Gbtrs     = Level3;
 
   struct Level2 {
     struct Unblocked {};

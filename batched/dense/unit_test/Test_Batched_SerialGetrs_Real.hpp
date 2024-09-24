@@ -30,13 +30,13 @@ TEST_F(TestCategory, test_batched_getrs_t_float) {
 #endif
 
 #if defined(KOKKOSKERNELS_INST_DOUBLE)
-TEST_F(TestCategory, test_batched_getrf_nt_double) {
+TEST_F(TestCategory, test_batched_getrs_nt_double) {
   using param_tag_type = ::Test::Getrs::ParamTag<Trans::NoTranspose>;
   using algo_tag_type = typename Algo::Getrs::Unblocked;
 
   test_batched_getrs<TestDevice, double, param_tag_type, algo_tag_type>();
 }
-TEST_F(TestCategory, test_batched_getrf_t_double) {
+TEST_F(TestCategory, test_batched_getrs_t_double) {
   using param_tag_type = ::Test::Getrs::ParamTag<Trans::Transpose>;
   using algo_tag_type = typename Algo::Getrs::Unblocked;
 

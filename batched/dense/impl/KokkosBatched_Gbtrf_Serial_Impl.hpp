@@ -73,7 +73,7 @@ KOKKOS_INLINE_FUNCTION static int checkGbtrfInput(
 }
 
 template <>
-struct SerialGbtrf<Algo::Trsv::Unblocked> {
+struct SerialGbtrf<Algo::Gbtrf::Unblocked> {
   template <typename ABViewType, typename PivViewType>
   KOKKOS_INLINE_FUNCTION static int invoke(
       const ABViewType &AB, const PivViewType &piv, const int kl, const int ku,
