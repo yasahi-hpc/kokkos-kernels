@@ -42,9 +42,8 @@ namespace KokkosBatched {
 template <typename ArgAlgo>
 struct SerialGbtrf {
   template <typename ABViewType, typename PivViewType>
-  KOKKOS_INLINE_FUNCTION static int invoke(
-      const ABViewType &Ab, const PivViewType &piv, const int kl, const int ku,
-      const int m = -1);
+  KOKKOS_INLINE_FUNCTION static int invoke(const ABViewType &Ab, const PivViewType &piv, const int kl, const int ku,
+                                           const int m = 0);
 };
 }  // namespace KokkosBatched
 

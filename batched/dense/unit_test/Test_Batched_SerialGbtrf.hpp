@@ -28,8 +28,7 @@ using namespace KokkosBatched;
 namespace Test {
 namespace Gbtrf {
 
-template <typename DeviceType, typename ABViewType, typename PivViewType,
-          typename AlgoTagType>
+template <typename DeviceType, typename ABViewType, typename PivViewType, typename AlgoTagType>
 struct Functor_BatchedSerialGbtrf {
   using execution_space = typename DeviceType::execution_space;
   ABViewType _ab;
@@ -37,8 +36,7 @@ struct Functor_BatchedSerialGbtrf {
   int _kl, _ku;
 
   KOKKOS_INLINE_FUNCTION
-  Functor_BatchedSerialGbtrf(const ABViewType &ab, const PivViewType &ipiv,
-                             int kl, int ku)
+  Functor_BatchedSerialGbtrf(const ABViewType &ab, const PivViewType &ipiv, int kl, int ku)
       : _ab(ab), _ipiv(ipiv), _kl(kl), _ku(ku) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -90,8 +88,7 @@ struct Functor_BatchedSerialGetrf {
   }
 };
 
-template <typename DeviceType, typename ScalarType, typename LayoutType,
-          typename AlgoTagType>
+template <typename DeviceType, typename ScalarType, typename LayoutType, typename AlgoTagType>
 /// \brief Implementation details of batched gbtrf test
 ///
 /// \param N [in] Batch size of RHS (banded matrix can also be batched matrix)
@@ -106,16 +103,12 @@ void impl_test_batched_gbtrf(const int N) {
 
   constexpr int BlkSize = 10, kl = 2, ku = 2;
   constexpr int ldab = 2 * kl + ku + 1;
-  View3DType A("A", N, BlkSize, BlkSize),
-      A_reconst("A_reconst", N, BlkSize, BlkSize),
-      NL("NL", N, BlkSize, BlkSize), L("L", N, BlkSize, BlkSize),
-      U("U", N, BlkSize, BlkSize), U_ref("U_ref", N, BlkSize, BlkSize),
+  View3DType A("A", N, BlkSize, BlkSize), A_reconst("A_reconst", N, BlkSize, BlkSize), NL("NL", N, BlkSize, BlkSize),
+      L("L", N, BlkSize, BlkSize), U("U", N, BlkSize, BlkSize), U_ref("U_ref", N, BlkSize, BlkSize),
       I("I", N, BlkSize, BlkSize);
 
-  View3DType AB("AB", N, ldab, BlkSize),
-      AB_upper("AB_upper", N, kl + ku + 1, BlkSize);
-  View2DType ones(Kokkos::view_alloc("ones", Kokkos::WithoutInitializing), N,
-                  BlkSize);
+  View3DType AB("AB", N, ldab, BlkSize), AB_upper("AB_upper", N, kl + ku + 1, BlkSize);
+  View2DType ones(Kokkos::view_alloc("ones", Kokkos::WithoutInitializing), N, BlkSize);
   PivView2DType ipiv("ipiv", N, BlkSize), ipiv_ref("ipiv_ref", N, BlkSize);
 
   auto h_A = Kokkos::create_mirror_view(A);
@@ -140,42 +133,35 @@ void impl_test_batched_gbtrf(const int N) {
   Kokkos::fence();
 
   // gbtrf to factorize matrix A = P * L * U
-  auto info = Functor_BatchedSerialGbtrf<DeviceType, View3DType, PivView2DType,
-                             AlgoTagType>(AB, ipiv, kl, ku)
-      .run();
-  
+  auto info = Functor_BatchedSerialGbtrf<DeviceType, View3DType, PivView2DType, AlgoTagType>(AB, ipiv, kl, ku).run();
+
   Kokkos::fence();
   EXPECT_EQ(info, 0);
 
   // extract matrix U from AB
   // first take subview, note u is stored at 0:kl+ku+1
-  auto sub_AB = Kokkos::subview(
-      AB, Kokkos::ALL(), Kokkos::pair<int, int>(0, kl + ku + 1), Kokkos::ALL());
+  auto sub_AB = Kokkos::subview(AB, Kokkos::ALL(), Kokkos::pair<int, int>(0, kl + ku + 1), Kokkos::ALL());
   Kokkos::deep_copy(AB_upper, sub_AB);
 
-  banded_to_full<View3DType, View3DType, KokkosBatched::Uplo::Upper>(
-      AB_upper, U, kl + ku);
+  banded_to_full<View3DType, View3DType, KokkosBatched::Uplo::Upper>(AB_upper, U, kl + ku);
 
   // Reference is made from getrf
   // getrf to factorize matrix A = P * L * U
-  Functor_BatchedSerialGetrf<DeviceType, View3DType, PivView2DType,
-                             AlgoTagType>(A, ipiv_ref)
-      .run();
+  Functor_BatchedSerialGetrf<DeviceType, View3DType, PivView2DType, AlgoTagType>(A, ipiv_ref).run();
 
   // Copy upper triangular components to U_ref
-  create_triangular_matrix<View3DType, View3DType, KokkosBatched::Uplo::Upper>(
-      A, U_ref);
+  create_triangular_matrix<View3DType, View3DType, KokkosBatched::Uplo::Upper>(A, U_ref);
 
   // this eps is about 10^-14
   RealType eps = 1.0e3 * ats::epsilon();
 
-  auto h_U = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), U);
+  auto h_U     = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), U);
   auto h_U_ref = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), U_ref);
 
   // Check if U (gbtrf) == U_ref (getrf)
   for (int ib = 0; ib < N; ib++) {
     for (int i = 0; i < BlkSize; i++) {
-      for (int j = 0; i < BlkSize; j++) {
+      for (int j = 0; j < BlkSize; j++) {
         EXPECT_NEAR_KK(h_U(ib, i, j), h_U_ref(ib, i, j), eps);
       }
     }

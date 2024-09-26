@@ -60,8 +60,8 @@ struct Functor_BatchedSerialGetrf {
   }
 };
 
-template <typename DeviceType, typename AViewType, typename PivViewType,
-          typename BViewType, typename ParamTagType, typename AlgoTagType>
+template <typename DeviceType, typename AViewType, typename PivViewType, typename BViewType, typename ParamTagType,
+          typename AlgoTagType>
 struct Functor_BatchedSerialGetrs {
   using execution_space = typename DeviceType::execution_space;
   AViewType _a;
@@ -69,18 +69,16 @@ struct Functor_BatchedSerialGetrs {
   PivViewType _ipiv;
 
   KOKKOS_INLINE_FUNCTION
-  Functor_BatchedSerialGetrs(const AViewType &a, const PivViewType &ipiv,
-                             const BViewType &b)
+  Functor_BatchedSerialGetrs(const AViewType &a, const PivViewType &ipiv, const BViewType &b)
       : _a(a), _b(b), _ipiv(ipiv) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const ParamTagType &, const int k, int &info) const {
-    auto aa = Kokkos::subview(_a, k, Kokkos::ALL(), Kokkos::ALL());
+    auto aa   = Kokkos::subview(_a, k, Kokkos::ALL(), Kokkos::ALL());
     auto ipiv = Kokkos::subview(_ipiv, k, Kokkos::ALL());
     auto bb   = Kokkos::subview(_b, k, Kokkos::ALL());
 
-    info += KokkosBatched::SerialGetrs<typename ParamTagType::trans,
-                               AlgoTagType>::invoke(aa, ipiv, bb);
+    info += KokkosBatched::SerialGetrs<typename ParamTagType::trans, AlgoTagType>::invoke(aa, ipiv, bb);
   }
 
   inline int run() {
@@ -97,8 +95,8 @@ struct Functor_BatchedSerialGetrs {
   }
 };
 
-template <typename DeviceType, typename ScalarType, typename AViewType,
-          typename xViewType, typename yViewType>
+template <typename DeviceType, typename ScalarType, typename AViewType, typename xViewType, typename yViewType,
+          typename ParamTagType>
 struct Functor_BatchedSerialGemv {
   using execution_space = typename DeviceType::execution_space;
   AViewType _a;
@@ -107,19 +105,17 @@ struct Functor_BatchedSerialGemv {
   ScalarType _alpha, _beta;
 
   KOKKOS_INLINE_FUNCTION
-  Functor_BatchedSerialGemv(const ScalarType alpha, const AViewType &a,
-                            const xViewType &x, const ScalarType beta,
+  Functor_BatchedSerialGemv(const ScalarType alpha, const AViewType &a, const xViewType &x, const ScalarType beta,
                             const yViewType &y)
       : _a(a), _x(x), _y(y), _alpha(alpha), _beta(beta) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int k) const {
+  void operator()(const ParamTagType &, const int k) const {
     auto aa = Kokkos::subview(_a, k, Kokkos::ALL(), Kokkos::ALL());
     auto xx = Kokkos::subview(_x, k, Kokkos::ALL());
     auto yy = Kokkos::subview(_y, k, Kokkos::ALL());
 
-    KokkosBlas::SerialGemv<Trans::NoTranspose, Algo::Gemv::Unblocked>::invoke(
-        _alpha, aa, xx, _beta, yy);
+    KokkosBlas::SerialGemv<typename ParamTagType::trans, Algo::Gemv::Unblocked>::invoke(_alpha, aa, xx, _beta, yy);
   }
 
   inline void run() {
@@ -127,13 +123,12 @@ struct Functor_BatchedSerialGemv {
     std::string name_region("KokkosBatched::Test::SerialGetrs");
     const std::string name_value_type = Test::value_type_name<value_type>();
     std::string name                  = name_region + name_value_type;
-    Kokkos::RangePolicy<execution_space> policy(0, _x.extent(0));
+    Kokkos::RangePolicy<execution_space, ParamTagType> policy(0, _x.extent(0));
     Kokkos::parallel_for(name.c_str(), policy, *this);
   }
 };
 
-template <typename DeviceType, typename ScalarType, typename LayoutType,
-          typename ParamTagType, typename AlgoTagType>
+template <typename DeviceType, typename ScalarType, typename LayoutType, typename ParamTagType, typename AlgoTagType>
 /// \brief Implementation details of batched getrs test
 /// Confirm A * x = b, where
 ///        A: [[1, 1],
@@ -148,17 +143,16 @@ template <typename DeviceType, typename ScalarType, typename LayoutType,
 /// \param k [in] Number of superdiagonals or subdiagonals of matrix A
 /// \param BlkSize [in] Block size of matrix A
 void impl_test_batched_getrs_analytical(const int N) {
-  using ats            = typename Kokkos::ArithTraits<ScalarType>;
-  using RealType       = typename ats::mag_type;
+  using ats           = typename Kokkos::ArithTraits<ScalarType>;
+  using RealType      = typename ats::mag_type;
   using View2DType    = Kokkos::View<ScalarType **, LayoutType, DeviceType>;
   using View3DType    = Kokkos::View<ScalarType ***, LayoutType, DeviceType>;
   using PivView2DType = Kokkos::View<int **, LayoutType, DeviceType>;
 
   constexpr int BlkSize = 2;
   View3DType A("A", N, BlkSize, BlkSize), ref("Ref", N, BlkSize, BlkSize);
-  View3DType lu("lu", N, BlkSize, BlkSize);  // Factorized
-  View2DType x("x", N, BlkSize), y("y", N, BlkSize),
-      x_ref("x_ref", N, BlkSize);  // Solutions
+  View3DType lu("lu", N, BlkSize, BlkSize);                                       // Factorized
+  View2DType x("x", N, BlkSize), y("y", N, BlkSize), x_ref("x_ref", N, BlkSize);  // Solutions
   PivView2DType ipiv("ipiv", N, BlkSize);
 
   auto h_A     = Kokkos::create_mirror_view(A);
@@ -180,14 +174,12 @@ void impl_test_batched_getrs_analytical(const int N) {
   Kokkos::deep_copy(x, h_x);
 
   // getrf to factorize matrix A = P * L * U
-  Functor_BatchedSerialGetrf<DeviceType, View3DType, PivView2DType,
-                             AlgoTagType>(A, ipiv)
-      .run();
+  Functor_BatchedSerialGetrf<DeviceType, View3DType, PivView2DType, AlgoTagType>(A, ipiv).run();
 
   // getrs (Note, LU is a factorized matrix of A)
-  auto info = Functor_BatchedSerialGetrs<DeviceType, View3DType, PivView2DType, View2DType,
-                             ParamTagType, AlgoTagType>(A, ipiv, x)
-      .run();
+  auto info = Functor_BatchedSerialGetrs<DeviceType, View3DType, PivView2DType, View2DType, ParamTagType, AlgoTagType>(
+                  A, ipiv, x)
+                  .run();
 
   Kokkos::fence();
   EXPECT_EQ(info, 0);
@@ -204,24 +196,22 @@ void impl_test_batched_getrs_analytical(const int N) {
   }
 }
 
-template <typename DeviceType, typename ScalarType, typename LayoutType,
-          typename ParamTagType, typename AlgoTagType>
+template <typename DeviceType, typename ScalarType, typename LayoutType, typename ParamTagType, typename AlgoTagType>
 /// \brief Implementation details of batched getrs test
 ///
 /// \param N [in] Batch size of RHS (banded matrix can also be batched matrix)
 /// \param k [in] Number of superdiagonals or subdiagonals of matrix A
 /// \param BlkSize [in] Block size of matrix A
 void impl_test_batched_getrs(const int N, const int BlkSize) {
-  using ats = typename Kokkos::ArithTraits<ScalarType>;
+  using ats           = typename Kokkos::ArithTraits<ScalarType>;
   using RealType      = typename ats::mag_type;
   using View2DType    = Kokkos::View<ScalarType **, LayoutType, DeviceType>;
   using View3DType    = Kokkos::View<ScalarType ***, LayoutType, DeviceType>;
   using PivView2DType = Kokkos::View<int **, LayoutType, DeviceType>;
 
   View3DType A("A", N, BlkSize, BlkSize), ref("Ref", N, BlkSize, BlkSize);
-  View3DType LU("LU", N, BlkSize, BlkSize);  // Factorized
-  View2DType x("x", N, BlkSize), y("y", N, BlkSize),
-      b("b", N, BlkSize);  // Solutions
+  View3DType LU("LU", N, BlkSize, BlkSize);                               // Factorized
+  View2DType x("x", N, BlkSize), y("y", N, BlkSize), b("b", N, BlkSize);  // Solutions
   PivView2DType ipiv("ipiv", N, BlkSize);
 
   using execution_space = typename DeviceType::execution_space;
@@ -236,22 +226,21 @@ void impl_test_batched_getrs(const int N, const int BlkSize) {
   Kokkos::deep_copy(b, x);
 
   // getrf to factorize matrix A = P * L * U
-  Functor_BatchedSerialGetrf<DeviceType, View3DType, PivView2DType,
-                             AlgoTagType>(LU, ipiv)
-      .run();
+  Functor_BatchedSerialGetrf<DeviceType, View3DType, PivView2DType, AlgoTagType>(LU, ipiv).run();
 
   // getrs (Note, LU is a factorized matrix of A)
-  auto info = Functor_BatchedSerialGetrs<DeviceType, View3DType, PivView2DType, View2DType,
-                             ParamTagType, AlgoTagType>(LU, ipiv, x)
-      .run();
+  auto info = Functor_BatchedSerialGetrs<DeviceType, View3DType, PivView2DType, View2DType, ParamTagType, AlgoTagType>(
+                  LU, ipiv, x)
+                  .run();
 
   Kokkos::fence();
   EXPECT_EQ(info, 0);
 
   // Gemv to compute A*x, this should be identical to b
-  Functor_BatchedSerialGemv<DeviceType, ScalarType, View3DType, View2DType,
-                            View2DType>(1.0, A, x, 0.0, y)
+  Functor_BatchedSerialGemv<DeviceType, ScalarType, View3DType, View2DType, View2DType, ParamTagType>(1.0, A, x, 0.0, y)
       .run();
+
+  Kokkos::fence();
 
   // this eps is about 10^-14
   RealType eps = 1.0e3 * ats::epsilon();
@@ -269,7 +258,7 @@ void impl_test_batched_getrs(const int N, const int BlkSize) {
 }  // namespace Getrs
 }  // namespace Test
 
-template <typename DeviceType, typename ScalarType, typename ParamTagType,  typename AlgoTagType>
+template <typename DeviceType, typename ScalarType, typename ParamTagType, typename AlgoTagType>
 int test_batched_getrs() {
 #if defined(KOKKOSKERNELS_INST_LAYOUTLEFT)
   {

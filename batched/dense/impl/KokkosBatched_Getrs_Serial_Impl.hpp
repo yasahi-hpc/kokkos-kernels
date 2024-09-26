@@ -24,16 +24,12 @@
 namespace KokkosBatched {
 
 template <typename AViewType, typename BViewType>
-KOKKOS_INLINE_FUNCTION static int checkGetrsInput(
-    [[maybe_unused]] const AViewType &A, [[maybe_unused]] const BViewType &b) {
-  static_assert(Kokkos::is_view<AViewType>::value,
-                "KokkosBatched::getrs: AViewType is not a Kokkos::View.");
-  static_assert(Kokkos::is_view<BViewType>::value,
-                "KokkosBatched::getrs: BViewType is not a Kokkos::View.");
-  static_assert(AViewType::rank == 2,
-                "KokkosBatched::getrs: AViewType must have rank 2.");
-  static_assert(BViewType::rank == 1,
-                "KokkosBatched::getrs: BViewType must have rank 1.");
+KOKKOS_INLINE_FUNCTION static int checkGetrsInput([[maybe_unused]] const AViewType &A,
+                                                  [[maybe_unused]] const BViewType &b) {
+  static_assert(Kokkos::is_view<AViewType>::value, "KokkosBatched::getrs: AViewType is not a Kokkos::View.");
+  static_assert(Kokkos::is_view<BViewType>::value, "KokkosBatched::getrs: BViewType is not a Kokkos::View.");
+  static_assert(AViewType::rank == 2, "KokkosBatched::getrs: AViewType must have rank 2.");
+  static_assert(BViewType::rank == 1, "KokkosBatched::getrs: BViewType must have rank 1.");
 #if (KOKKOSKERNELS_DEBUG_LEVEL > 0)
   const int lda = A.extent(0), n = A.extent(1);
   if (lda < Kokkos::max(1, n)) {
@@ -64,24 +60,19 @@ KOKKOS_INLINE_FUNCTION static int checkGetrsInput(
 template <>
 struct SerialGetrs<Trans::NoTranspose, Algo::Getrs::Unblocked> {
   template <typename AViewType, typename PivViewType, typename BViewType>
-  KOKKOS_INLINE_FUNCTION static int invoke(const AViewType &A,
-                                           const PivViewType &piv,
-                                           const BViewType &b) {
+  KOKKOS_INLINE_FUNCTION static int invoke(const AViewType &A, const PivViewType &piv, const BViewType &b) {
+    // quick return if possible
+    if (A.extent(1) == 0) return 0;
+
     auto info = checkGetrsInput(A, b);
     if (info) return info;
 
-    info =
-        KokkosBatched::SerialLaswp<Side::Left, Direct::Forward>::invoke(piv, b);
-    if (info) return info;
+    [[maybe_unused]] auto info_laswp = KokkosBatched::SerialLaswp<Side::Left, Direct::Forward>::invoke(piv, b);
 
-    info = KokkosBatched::SerialTrsm<Side::Left, Uplo::Lower,
-                                     Trans::NoTranspose, Diag::Unit,
-                                     Algo::Trsm::Unblocked>::invoke(1.0, A, b);
-    info = KokkosBatched::SerialTrsm<Side::Left, Uplo::Upper,
-                                     Trans::NoTranspose, Diag::NonUnit,
-                                     Algo::Trsm::Unblocked>::invoke(1.0, A, b);
-
-    if (info) return info;
+    auto info_trsm = KokkosBatched::SerialTrsm<Side::Left, Uplo::Lower, Trans::NoTranspose, Diag::Unit,
+                                               Algo::Trsm::Unblocked>::invoke(1.0, A, b);
+    info_trsm      = KokkosBatched::SerialTrsm<Side::Left, Uplo::Upper, Trans::NoTranspose, Diag::NonUnit,
+                                          Algo::Trsm::Unblocked>::invoke(1.0, A, b);
 
     return 0;
   }
@@ -91,24 +82,20 @@ struct SerialGetrs<Trans::NoTranspose, Algo::Getrs::Unblocked> {
 template <>
 struct SerialGetrs<Trans::Transpose, Algo::Getrs::Unblocked> {
   template <typename AViewType, typename PivViewType, typename BViewType>
-  KOKKOS_INLINE_FUNCTION static int invoke(const AViewType &A,
-                                           const PivViewType &piv,
-                                           const BViewType &b) {
+  KOKKOS_INLINE_FUNCTION static int invoke(const AViewType &A, const PivViewType &piv, const BViewType &b) {
+    // quick return if possible
+    if (A.extent(1) == 0) return 0;
+
     auto info = checkGetrsInput(A, b);
     if (info) return info;
 
-    info = KokkosBatched::SerialTrsm<Side::Left, Uplo::Upper, Trans::Transpose,
-                                     Diag::NonUnit,
-                                     Algo::Trsm::Unblocked>::invoke(1.0, A, b);
-    info = KokkosBatched::SerialTrsm<Side::Left, Uplo::Lower, Trans::Transpose,
-                                     Diag::Unit,
-                                     Algo::Trsm::Unblocked>::invoke(1.0, A, b);
+    auto info_trsm = KokkosBatched::SerialTrsm<Side::Left, Uplo::Upper, Trans::Transpose, Diag::NonUnit,
+                                               Algo::Trsm::Unblocked>::invoke(1.0, A, b);
+    info_trsm =
+        KokkosBatched::SerialTrsm<Side::Left, Uplo::Lower, Trans::Transpose, Diag::Unit, Algo::Trsm::Unblocked>::invoke(
+            1.0, A, b);
 
-    if (info) return info;
-
-    info = KokkosBatched::SerialLaswp<Side::Left, Direct::Backward>::invoke(piv,
-                                                                            b);
-    if (info) return info;
+    [[maybe_unused]] auto info_laswp = KokkosBatched::SerialLaswp<Side::Left, Direct::Backward>::invoke(piv, b);
 
     return 0;
   }

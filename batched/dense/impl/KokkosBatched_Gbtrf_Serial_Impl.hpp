@@ -24,13 +24,10 @@
 
 namespace KokkosBatched {
 template <typename ABViewType>
-KOKKOS_INLINE_FUNCTION static int checkGbtrfInput(
-    [[maybe_unused]] const ABViewType &AB, [[maybe_unused]] const int kl,
-    [[maybe_unused]] const int ku, [[maybe_unused]] const int m) {
-  static_assert(Kokkos::is_view_v<ABViewType>,
-                "KokkosBatched::gbtrf: ABViewType is not a Kokkos::View.");
-  static_assert(ABViewType::rank == 2,
-                "KokkosBatched::gbtrs: ABViewType must have rank 2.");
+KOKKOS_INLINE_FUNCTION static int checkGbtrfInput([[maybe_unused]] const ABViewType &AB, [[maybe_unused]] const int kl,
+                                                  [[maybe_unused]] const int ku, [[maybe_unused]] const int m) {
+  static_assert(Kokkos::is_view_v<ABViewType>, "KokkosBatched::gbtrf: ABViewType is not a Kokkos::View.");
+  static_assert(ABViewType::rank == 2, "KokkosBatched::gbtrs: ABViewType must have rank 2.");
 #if (KOKKOSKERNELS_DEBUG_LEVEL > 0)
   if (m < 0) {
     Kokkos::printf(
@@ -75,11 +72,10 @@ KOKKOS_INLINE_FUNCTION static int checkGbtrfInput(
 template <>
 struct SerialGbtrf<Algo::Gbtrf::Unblocked> {
   template <typename ABViewType, typename PivViewType>
-  KOKKOS_INLINE_FUNCTION static int invoke(
-      const ABViewType &AB, const PivViewType &piv, const int kl, const int ku,
-      const int _m = -1) {
+  KOKKOS_INLINE_FUNCTION static int invoke(const ABViewType &AB, const PivViewType &piv, const int kl, const int ku,
+                                           const int _m = 0) {
     using ScalarType = typename ABViewType::non_const_value_type;
-    int m            = _m > 0 ? _m: AB.extent(1);
+    int m            = _m > 0 ? _m : AB.extent(1);
 
     auto info = checkGbtrfInput(AB, kl, ku, m);
     if (info) return info;
@@ -113,11 +109,10 @@ struct SerialGbtrf<Algo::Gbtrf::Unblocked> {
 
       // Find pivot and test for singularity. KM is the number of subdiagonals
       // elements in the current column.
-      int km = Kokkos::min(kl, m - j - 1);
-      auto sub_col_AB =
-          Kokkos::subview(AB, Kokkos::pair<int, int>(kv, kv + km + 1), j);
-      int jp = SerialIamax::invoke(sub_col_AB);
-      piv(j) = jp + j;
+      int km          = Kokkos::min(kl, m - j - 1);
+      auto sub_col_AB = Kokkos::subview(AB, Kokkos::pair<int, int>(kv, kv + km + 1), j);
+      int jp          = SerialIamax::invoke(sub_col_AB);
+      piv(j)          = jp + j;
 
       if (AB(kv + jp, j) == 0) {
         // If pivot is zero, set INFO to the index of the pivot unless a
@@ -135,16 +130,13 @@ struct SerialGbtrf<Algo::Gbtrf::Unblocked> {
 
         if (km > 0) {
           // Compute multipliers
-          const ScalarType alpha = 1.0 / AB(kv, j);
-          auto sub_col_AB        = Kokkos::subview(
-              AB, Kokkos::pair<int, int>(kv + 1, kv + km + 1), j);
-          [[maybe_unused]] auto info_scal =
-              KokkosBlas::SerialScale::invoke(alpha, sub_col_AB);
+          const ScalarType alpha          = 1.0 / AB(kv, j);
+          auto sub_col_AB                 = Kokkos::subview(AB, Kokkos::pair<int, int>(kv + 1, kv + km + 1), j);
+          [[maybe_unused]] auto info_scal = KokkosBlas::SerialScale::invoke(alpha, sub_col_AB);
 
           // Update trailing submatrix within the band
           if (ju > j) {
-            auto x = Kokkos::subview(
-                AB, Kokkos::pair<int, int>(kv + 1, kv + km + 1), j);
+            auto x = Kokkos::subview(AB, Kokkos::pair<int, int>(kv + 1, kv + km + 1), j);
 
             // dger with alpha = -1.0
             for (int k = 0; k < ju - j; ++k) {

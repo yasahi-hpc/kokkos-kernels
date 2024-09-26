@@ -33,8 +33,7 @@ struct ParamTag {
   using trans = T;
 };
 
-template <typename DeviceType, typename ABViewType, typename PivViewType,
-          typename AlgoTagType>
+template <typename DeviceType, typename ABViewType, typename PivViewType, typename AlgoTagType>
 struct Functor_BatchedSerialGbtrf {
   using execution_space = typename DeviceType::execution_space;
   ABViewType _ab;
@@ -42,8 +41,7 @@ struct Functor_BatchedSerialGbtrf {
   int _kl, _ku;
 
   KOKKOS_INLINE_FUNCTION
-  Functor_BatchedSerialGbtrf(const ABViewType &ab, const PivViewType &ipiv,
-                             int kl, int ku)
+  Functor_BatchedSerialGbtrf(const ABViewType &ab, const PivViewType &ipiv, int kl, int ku)
       : _ab(ab), _ipiv(ipiv), _kl(kl), _ku(ku) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -64,8 +62,8 @@ struct Functor_BatchedSerialGbtrf {
   }
 };
 
-template <typename DeviceType, typename AViewType, typename BViewType,
-          typename PivViewType, typename ParamTagType, typename AlgoTagType>
+template <typename DeviceType, typename AViewType, typename BViewType, typename PivViewType, typename ParamTagType,
+          typename AlgoTagType>
 struct Functor_BatchedSerialGbtrs {
   using execution_space = typename DeviceType::execution_space;
   AViewType _a;
@@ -74,8 +72,7 @@ struct Functor_BatchedSerialGbtrs {
   int _kl, _ku;
 
   KOKKOS_INLINE_FUNCTION
-  Functor_BatchedSerialGbtrs(const AViewType &a, const BViewType &b,
-                             const PivViewType &ipiv, int kl, int ku)
+  Functor_BatchedSerialGbtrs(const AViewType &a, const BViewType &b, const PivViewType &ipiv, int kl, int ku)
       : _a(a), _b(b), _ipiv(ipiv), _kl(kl), _ku(ku) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -84,8 +81,7 @@ struct Functor_BatchedSerialGbtrs {
     auto bb   = Kokkos::subview(_b, k, Kokkos::ALL());
     auto ipiv = Kokkos::subview(_ipiv, k, Kokkos::ALL());
 
-    info += KokkosBatched::SerialGbtrs<typename ParamTagType::trans,
-                               AlgoTagType>::invoke(aa, bb, ipiv, _kl, _ku);
+    info += KokkosBatched::SerialGbtrs<typename ParamTagType::trans, AlgoTagType>::invoke(aa, bb, ipiv, _kl, _ku);
   }
 
   inline int run() {
@@ -102,8 +98,8 @@ struct Functor_BatchedSerialGbtrs {
   }
 };
 
-template <typename DeviceType, typename ScalarType, typename AViewType,
-          typename xViewType, typename yViewType, typename ParamTagType>
+template <typename DeviceType, typename ScalarType, typename AViewType, typename xViewType, typename yViewType,
+          typename ParamTagType>
 struct Functor_BatchedSerialGemv {
   using execution_space = typename DeviceType::execution_space;
   AViewType _a;
@@ -112,8 +108,7 @@ struct Functor_BatchedSerialGemv {
   ScalarType _alpha, _beta;
 
   KOKKOS_INLINE_FUNCTION
-  Functor_BatchedSerialGemv(const ScalarType alpha, const AViewType &a,
-                            const xViewType &x, const ScalarType beta,
+  Functor_BatchedSerialGemv(const ScalarType alpha, const AViewType &a, const xViewType &x, const ScalarType beta,
                             const yViewType &y)
       : _alpha(alpha), _a(a), _x(x), _beta(beta), _y(y) {}
 
@@ -123,9 +118,7 @@ struct Functor_BatchedSerialGemv {
     auto xx = Kokkos::subview(_x, k, Kokkos::ALL());
     auto yy = Kokkos::subview(_y, k, Kokkos::ALL());
 
-    KokkosBlas::SerialGemv<typename ParamTagType::trans,
-                           Algo::Gemv::Unblocked>::invoke(_alpha, aa, xx, _beta,
-                                                          yy);
+    KokkosBlas::SerialGemv<typename ParamTagType::trans, Algo::Gemv::Unblocked>::invoke(_alpha, aa, xx, _beta, yy);
   }
 
   inline void run() {
@@ -138,8 +131,7 @@ struct Functor_BatchedSerialGemv {
   }
 };
 
-template <typename DeviceType, typename ScalarType, typename LayoutType,
-          typename ParamTagType, typename AlgoTagType>
+template <typename DeviceType, typename ScalarType, typename LayoutType, typename ParamTagType, typename AlgoTagType>
 /// \brief Implementation details of batched gbtrs test
 ///        Confirm A * x = b, where
 ///        A: [[1, -3, -2,  0],
@@ -158,17 +150,16 @@ template <typename DeviceType, typename ScalarType, typename LayoutType,
 /// \param k [in] Number of superdiagonals or subdiagonals of matrix A
 /// \param BlkSize [in] Block size of matrix A
 void impl_test_batched_gbtrs_analytical(const int N) {
-  using ats            = typename Kokkos::ArithTraits<ScalarType>;
-  using RealType       = typename ats::mag_type;
+  using ats         = typename Kokkos::ArithTraits<ScalarType>;
+  using RealType    = typename ats::mag_type;
   using View2DType  = Kokkos::View<ScalarType **, LayoutType, DeviceType>;
   using View3DType  = Kokkos::View<ScalarType ***, LayoutType, DeviceType>;
   using PivViewType = Kokkos::View<int **, LayoutType, DeviceType>;
 
   constexpr int BlkSize = 4, kl = 2, ku = 2;
   constexpr int ldab = 2 * kl + ku + 1;
-  View3DType A("A", N, BlkSize, BlkSize),
-      AB("AB", N, ldab, BlkSize);                               // Banded matrix
-  View2DType x0("x0", N, BlkSize), x_ref("x_ref", N, BlkSize);  // Solutions
+  View3DType A("A", N, BlkSize, BlkSize), AB("AB", N, ldab, BlkSize);  // Banded matrix
+  View2DType x0("x0", N, BlkSize), x_ref("x_ref", N, BlkSize);         // Solutions
   PivViewType piv("piv", N, BlkSize);
 
   using ArgTrans = typename ParamTagType::trans;
@@ -190,8 +181,7 @@ void impl_test_batched_gbtrs_analytical(const int N) {
       h_x_ref(ib, 1) = 22.0 / 81.0;
       h_x_ref(ib, 2) = -40.0 / 81.0;
       h_x_ref(ib, 3) = -1.0 / 27.0;
-    } else if constexpr (std::is_same_v<ArgTrans,
-                                        KokkosBatched::Trans::Transpose>) {
+    } else if constexpr (std::is_same_v<ArgTrans, KokkosBatched::Trans::Transpose>) {
       h_x_ref(ib, 0) = -1.0 / 27.0;
       h_x_ref(ib, 1) = -40.0 / 81.0;
       h_x_ref(ib, 2) = 22.0 / 81.0;
@@ -207,21 +197,19 @@ void impl_test_batched_gbtrs_analytical(const int N) {
   full_to_banded(A, AB, kl, ku);
 
   // gbtrf to factorize matrix A = P * L * U
-  Functor_BatchedSerialGbtrf<DeviceType, View3DType, PivViewType, AlgoTagType>(
-      AB, piv, kl, ku)
-      .run();
+  Functor_BatchedSerialGbtrf<DeviceType, View3DType, PivViewType, AlgoTagType>(AB, piv, kl, ku).run();
 
   // gbtrs (Note, Ab is a factorized matrix of A)
-  auto info = Functor_BatchedSerialGbtrs<DeviceType, View3DType, View2DType, PivViewType,
-                             ParamTagType, AlgoTagType>(AB, x0, piv, kl, ku)
-      .run();
+  auto info = Functor_BatchedSerialGbtrs<DeviceType, View3DType, View2DType, PivViewType, ParamTagType, AlgoTagType>(
+                  AB, x0, piv, kl, ku)
+                  .run();
 
   Kokkos::fence();
   EXPECT_EQ(info, 0);
 
   // this eps is about 10^-14
   RealType eps = 1.0e3 * ats::epsilon();
-  auto h_x0 = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), x0);
+  auto h_x0    = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), x0);
 
   // Check x0 = [67/81, 22/81, -40/81, -1/27] or [-1/27, -40/81, 22/81, 67/81]
   for (int ib = 0; ib < N; ib++) {
@@ -231,16 +219,15 @@ void impl_test_batched_gbtrs_analytical(const int N) {
   }
 }
 
-template <typename DeviceType, typename ScalarType, typename LayoutType,
-          typename ParamTagType, typename AlgoTagType>
+template <typename DeviceType, typename ScalarType, typename LayoutType, typename ParamTagType, typename AlgoTagType>
 /// \brief Implementation details of batched gbtrs test
 ///        Confirm A * x = b, where
 /// \param N [in] Batch size of RHS (banded matrix can also be batched matrix)
 /// \param k [in] Number of superdiagonals or subdiagonals of matrix A
 /// \param BlkSize [in] Block size of matrix A
 void impl_test_batched_gbtrs(const int N, const int k, const int BlkSize) {
-  using ats            = typename Kokkos::ArithTraits<ScalarType>;
-  using RealType       = typename ats::mag_type;
+  using ats         = typename Kokkos::ArithTraits<ScalarType>;
+  using RealType    = typename ats::mag_type;
   using View2DType  = Kokkos::View<ScalarType **, LayoutType, DeviceType>;
   using View3DType  = Kokkos::View<ScalarType ***, LayoutType, DeviceType>;
   using PivViewType = Kokkos::View<int **, LayoutType, DeviceType>;
@@ -248,9 +235,8 @@ void impl_test_batched_gbtrs(const int N, const int k, const int BlkSize) {
   const int kl = k, ku = k;
   const int ldab = 2 * kl + ku + 1;
   View3DType A("A", N, BlkSize, BlkSize), tmp_A("tmp_A", N, BlkSize, BlkSize),
-      AB("AB", N, ldab, BlkSize);  // Banded matrix
-  View2DType x0("x0", N, BlkSize), x_ref("x_ref", N, BlkSize),
-      y0("y0", N, BlkSize);  // Solutions
+      AB("AB", N, ldab, BlkSize);                         // Banded matrix
+  View2DType x0("x0", N, BlkSize), y0("y0", N, BlkSize);  // Solutions
   PivViewType piv("piv", N, BlkSize);
 
   // Create a random matrix A and make it Positive Definite Symmetric
@@ -269,37 +255,33 @@ void impl_test_batched_gbtrs(const int N, const int k, const int BlkSize) {
   full_to_banded(tmp_A, AB, kl, ku);  // In banded storage
   banded_to_full(AB, A, kl, ku);      // In full storage
 
-  Kokkos::fence();
-
   // Create an initial solution vector x0 = [1, 1, 1, ...]
   Kokkos::deep_copy(x0, ScalarType(1.0));
-  auto h_x_ref = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), x0);
 
   // gbtrf to factorize matrix A = P * L * U
-  Functor_BatchedSerialGbtrf<DeviceType, View3DType, PivViewType, AlgoTagType>(
-      AB, piv, kl, ku)
-      .run();
+  Functor_BatchedSerialGbtrf<DeviceType, View3DType, PivViewType, AlgoTagType>(AB, piv, kl, ku).run();
 
   // gbtrs (Note, Ab is a factorized matrix of A)
-  auto info = Functor_BatchedSerialGbtrs<DeviceType, View3DType, View2DType, PivViewType,
-                             ParamTagType, AlgoTagType>(AB, x0, piv, kl, ku)
-      .run();
+  auto info = Functor_BatchedSerialGbtrs<DeviceType, View3DType, View2DType, PivViewType, ParamTagType, AlgoTagType>(
+                  AB, x0, piv, kl, ku)
+                  .run();
   Kokkos::fence();
   EXPECT_EQ(info, 0);
 
   // Gemv to compute A*x0, this should be identical to x_ref
-  Functor_BatchedSerialGemv<DeviceType, ScalarType, View3DType, View2DType,
-                            View2DType, ParamTagType>(1.0, A, x0, 0.0, y0)
+  Functor_BatchedSerialGemv<DeviceType, ScalarType, View3DType, View2DType, View2DType, ParamTagType>(1.0, A, x0, 0.0,
+                                                                                                      y0)
       .run();
+  Kokkos::fence();
 
   // this eps is about 10^-14
   RealType eps = 1.0e3 * ats::epsilon();
 
-  // Check A * x0 = x_ref
+  // Check A * x0 = x_ref (=1.0)
   auto h_y0 = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), y0);
   for (int ib = 0; ib < N; ib++) {
     for (int i = 0; i < BlkSize; i++) {
-      EXPECT_NEAR_KK(h_y0(ib, i), h_x_ref(ib, i), eps);
+      EXPECT_NEAR_KK(h_y0(ib, i), ScalarType(1.0), eps);
     }
   }
 }
@@ -307,7 +289,7 @@ void impl_test_batched_gbtrs(const int N, const int k, const int BlkSize) {
 }  // namespace Gbtrs
 }  // namespace Test
 
-template <typename DeviceType, typename ScalarType, typename ParamTagType,  typename AlgoTagType>
+template <typename DeviceType, typename ScalarType, typename ParamTagType, typename AlgoTagType>
 int test_batched_gbtrs() {
 #if defined(KOKKOSKERNELS_INST_LAYOUTLEFT)
   {
